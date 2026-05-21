@@ -104,6 +104,8 @@ async def get_all_section_embeddings(
     return [(row.id, row.description_embedding) for row in result.all()]
 
 
+from sqlalchemy.orm import selectinload
+
 async def get_pages_by_ids(
     session: AsyncSession,
     page_ids: list[int],
@@ -112,7 +114,7 @@ async def get_pages_by_ids(
     if not page_ids:
         return []
     result = await session.execute(
-        select(Page).where(Page.id.in_(page_ids))
+        select(Page).options(selectinload(Page.document)).where(Page.id.in_(page_ids))
     )
     return list(result.scalars().all())
 

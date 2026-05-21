@@ -91,3 +91,72 @@ async def get_all_sections(session: AsyncSession) -> list[RegistrySection]:
     """Get all registry sections."""
     result = await session.execute(select(RegistrySection))
     return list(result.scalars().all())
+
+
+async def get_all_section_embeddings(
+    session: AsyncSession,
+) -> list[tuple[int, list[float]]]:
+    """Get all section IDs and their description embeddings."""
+    result = await session.execute(
+        select(RegistrySection.id, RegistrySection.description_embedding)
+        .where(RegistrySection.description_embedding.is_not(None))
+    )
+    return [(row.id, row.description_embedding) for row in result.all()]
+
+
+async def get_pages_by_ids(
+    session: AsyncSession,
+    page_ids: list[int],
+) -> list[Page]:
+    """Get pages by their IDs."""
+    if not page_ids:
+        return []
+    result = await session.execute(
+        select(Page).where(Page.id.in_(page_ids))
+    )
+    return list(result.scalars().all())
+
+
+from sqlalchemy import func, text
+
+async def vector_search_chunks(
+    session: AsyncSession,
+    vec: list[float],
+    section_id: int | None,
+    top_k: int,
+) -> list[Chunk]:
+    """Search chunks using pgvector HNSW cosine distance."""
+    # We select Chunk.id, page_id, registry_section_id, content and distance.
+    # Actually it's easier to just return the Chunk objects and we can attach distance
+    # or just return Chunk since Chunk model has what we need.
+    
+    stmt = select(Chunk).order_by(Chunk.embedding.cosine_distance(vec)).limit(top_k)
+    if section_id is not None:
+        stmt = stmt.where(Chunk.registry_section_id == section_id)
+        
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def fts_search_chunks(
+    session: AsyncSession,
+    tsquery_str: str,
+    section_id: int | None,
+    top_k: int,
+) -> list[Chunk]:
+    """Search chunks using Full-Text Search (GIN)."""
+    # Use func.to_tsquery('simple', tsquery_str)
+    tsq = func.to_tsquery('simple', tsquery_str)
+    
+    stmt = select(Chunk).where(
+        Chunk.content_tsv.bool_op('@@')(tsq)
+    ).order_by(
+        func.ts_rank(Chunk.content_tsv, tsq).desc()
+    ).limit(top_k)
+    
+    if section_id is not None:
+        stmt = stmt.where(Chunk.registry_section_id == section_id)
+        
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+

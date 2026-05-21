@@ -8,3 +8,12 @@ MVP для дослідження методів оптимізації пошу
 - **Embeddings**: Ollama (paraphrase-multilingual-mpnet-base-v2)
 - **БД**: PostgreSQL 16 + pgvector
 - **Оркестрація**: LangGraph
+
+## Benchmark Очікування
+
+| Method                | Recall@5 |  MRR  | Avg time |
+|-----------------------|----------|-------|----------|
+| Vector Search         |   ?.?%   |  ?.?? |   ??ms   |
+| Full-Text Search      |   ?.?%   |  ?.?? |   ??ms   |
+| Hybrid + Rerank       |  ≥ 75%   | ≥ 0.60| < 2000ms |
+| Routing Accuracy      |  ≥ 90%   |   —   |  < 20ms  |

@@ -147,8 +147,14 @@ async def fts_search_chunks(
     top_k: int,
 ) -> list[Chunk]:
     """Search chunks using Full-Text Search (GIN)."""
-    # Use func.to_tsquery('simple', tsquery_str)
-    tsq = func.to_tsquery('simple', tsquery_str)
+    # Sanitize the tsquery string: replace spaces between words with '&' if no operator is present
+    import re
+    # Replace multiple spaces with a single space
+    clean_query = re.sub(r'\s+', ' ', tsquery_str.strip())
+    # Replace space with & if it is between word characters or quotes, and not near an operator
+    clean_query = re.sub(r'(?<=[^\s|&()])\s+(?=[^\s|&()])', ' & ', clean_query)
+    
+    tsq = func.to_tsquery('simple', clean_query)
     
     stmt = select(Chunk).where(
         Chunk.content_tsv.bool_op('@@')(tsq)

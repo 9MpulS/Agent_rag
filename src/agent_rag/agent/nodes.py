@@ -7,8 +7,8 @@ from agent_rag.agent.state import AgentState
 from agent_rag.embeddings import get_embedding
 from agent_rag.search.fts_search import fts_query_enhance
 from agent_rag.search.hybrid_search import hybrid_search
-from agent_rag.llm.prompts import SUFFICIENCY_SYSTEM, ANSWER_SYSTEM
-from db.repositories import get_all_section_embeddings
+from agent_rag.llm.prompts import ANSWER_SYSTEM
+from agent_rag.db.repositories import get_all_section_embeddings
 
 
 def cosine_similarity(v1: list[float], v2: list[float]) -> float:
@@ -95,28 +95,21 @@ async def search(state: AgentState) -> dict:
 async def check_sufficiency(state: AgentState) -> dict:
     t0 = time.perf_counter()
     results = state.get("search_results", [])
-    
+
     if not results:
         elapsed_ms = (time.perf_counter() - t0) * 1000
         return {
             "context_sufficient": False,
             "timings": {**state.get("timings", {}), "check_ms": round(elapsed_ms, 1)},
         }
-        
-    context_text = "\n\n".join(f"[{i+1}] {r.raw_text}" for i, r in enumerate(results))
-    user_prompt = f"Запит: {state['query']}\n\nКонтекст:\n{context_text}"
-    
-    response = await state["groq_client"].complete(SUFFICIENCY_SYSTEM, user_prompt)
-    is_sufficient = "YES" in response.content.upper()
-    
+
+    # Since we bypassed LLM reranker and use RRF scores directly (which are small fractions ~0.03),
+    # any valid results returned by the search are considered sufficient.
+    is_sufficient = len(results) > 0
+
     elapsed_ms = (time.perf_counter() - t0) * 1000
-    
-    token_usage = state.get("token_usage", {})
-    token_usage["sufficiency"] = response.usage
-    
     return {
         "context_sufficient": is_sufficient,
-        "token_usage": token_usage,
         "timings": {**state.get("timings", {}), "check_ms": round(elapsed_ms, 1)},
     }
 

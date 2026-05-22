@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from agent_rag.config import settings
 from agent_rag.llm.groq_client import GroqClient, LLMUsage
 from agent_rag.llm.prompts import FTS_QUERY_SYSTEM
-from db.repositories import fts_search_chunks
+from agent_rag.db.repositories import fts_search_chunks
 from agent_rag.search.vector_search import ChunkResult
 
 async def fts_query_enhance(groq: GroqClient, query: str) -> tuple[str, LLMUsage]:

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent_rag.config import settings
-from db.repositories import vector_search_chunks
+from agent_rag.db.repositories import vector_search_chunks
 
 @dataclass
 class ChunkResult:

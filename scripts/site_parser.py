@@ -9,9 +9,9 @@ from playwright.async_api import async_playwright
 # CONFIG
 # =========================================================
 BASE_URL = "https://normative.sumdu.edu.ua/"
-SAVE_ROOT = Path(r"C:\Pet_project\Agent RAG\pdf_documents")
+SAVE_ROOT = Path(r"pdf_documents")
 HEADLESS = False  # Тримаємо False, щоб Cloudflare не блокував сесію
-MAX_DOWNLOADS = 40
+MAX_DOWNLOADS = 100
 
 # =========================================================
 # HELPERS

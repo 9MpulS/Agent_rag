@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from agent_rag.config import settings
 from agent_rag.llm.groq_client import GroqClient
-from db.repositories import get_all_section_embeddings
+from agent_rag.db.repositories import get_all_section_embeddings
 
 @pytest.fixture(scope="session")
 def anyio_backend():

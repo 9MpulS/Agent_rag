@@ -175,7 +175,7 @@ async def seed(session: AsyncSession) -> None:
                 # Parse PDF into elements and chunk semantically
                 elements = parse_pdf(pdf_path)
                 text_chunks = chunk_elements(
-                    elements, max_characters=500, overlap=50
+                    elements, max_characters=750, overlap=50
                 )
 
                 if not text_chunks:

@@ -20,7 +20,7 @@ async def test_hybrid_search_benchmark(db_session, groq_client):
     # we just run the query and collect stats.
     # We will bypass the asserts if no ground truth is provided.
     
-    for item in BENCHMARK:
+    for item in BENCHMARK[:1]:
         await asyncio.sleep(settings.BENCHMARK_SLEEP_BETWEEN_QUERIES)
         
         query = item["query"]

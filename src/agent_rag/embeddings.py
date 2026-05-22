@@ -8,17 +8,17 @@ logger = structlog.get_logger()
 
 async def get_embedding(text: str) -> list[float]:
     """Get embedding for a single text string."""
-    url = f"{settings.OLLAMA_BASE_URL}/api/embeddings"
+    url = f"{settings.OLLAMA_BASE_URL}/api/embed"
     payload = {
         "model": settings.EMBEDDING_MODEL,
-        "prompt": text,
+        "input": text,
     }
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload)
+            response = await client.post(url, json=payload, timeout=60.0)
             response.raise_for_status()
             data = response.json()
-            return data["embedding"]
+            return data["embeddings"][0]
         except Exception as e:
             logger.error("embedding_error", text=text[:50], error=str(e))
             raise

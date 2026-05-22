@@ -1,153 +1,346 @@
-"""PDF document parser using the unstructured library.
+# -*- coding: utf-8 -*-
+"""PDF parser using LangChain + PyMuPDF with OCR fallback via Tesseract.
 
-This module provides functions for:
-- Parsing PDF files into structured elements (titles, paragraphs, lists, tables)
-- Chunking elements by title boundaries for RAG embedding
-- Extracting raw page-level text for database storage
+Pipeline:
+  1. ``pymupdf4llm`` renders each page to Markdown (tables, headings, lists).
+  2. If the extracted text looks garbled (non-standard font encoding —
+     common in Ukrainian PDFs), fall back to OCR:
+     - PyMuPDF renders each page to a high-resolution image (300 DPI).
+     - ``pytesseract`` runs Tesseract with ``ukr+eng`` language on the image.
+  3. LangChain splitters chunk the resulting Markdown into overlapping chunks
+     for vector embedding.
+
+Usage from other scripts::
+
+    from pdf_parser import parse_pdf_to_markdown, chunk_markdown, extract_pages_text
+
+Requires:
+    uv add pymupdf4llm langchain-community langchain-text-splitters pytesseract
+    tessdata/ukr.traineddata  (project-local Tesseract Ukrainian model)
 """
 
+from __future__ import annotations
+
+import os
+import re
+import subprocess
 from pathlib import Path
 
 import structlog
-from unstructured.chunking.title import chunk_by_title
-from unstructured.documents.elements import (
-    Element,
-    ListItem,
-    NarrativeText,
-    Table,
-    Title,
-)
-from unstructured.partition.pdf import partition_pdf
 
 logger = structlog.get_logger()
 
-# Element types that carry meaningful content for RAG retrieval.
-# We exclude Headers, Footers, PageBreaks, FigureCaption, etc.
-_KEEP_TYPES = (NarrativeText, Title, ListItem, Table)
+# ---------------------------------------------------------------------------
+# Tesseract / tessdata setup
+# ---------------------------------------------------------------------------
+
+def _setup_tessdata() -> str:
+    """Return the tessdata directory and ensure TESSDATA_PREFIX is set.
+
+    Prefers the project-local ``./tessdata/`` folder so no admin rights are
+    needed to install language packs.
+    """
+    local = Path("tessdata").resolve()
+    if local.is_dir() and (local / "ukr.traineddata").exists():
+        tessdata = str(local)
+    else:
+        tessdata = os.environ.get("TESSDATA_PREFIX", "")
+
+    if tessdata:
+        os.environ["TESSDATA_PREFIX"] = tessdata
+    return tessdata
 
 
-def parse_pdf(path: Path) -> list[Element]:
-    """Parse a PDF file and return filtered structural elements.
+# Run once at module import so subsequent pytesseract calls pick it up.
+_TESSDATA_DIR = _setup_tessdata()
 
-    Uses unstructured's partition_pdf with "fast" strategy (no OCR, no
-    deep-learning layout models) — suitable for digitally-created PDFs
-    of SumDU normative documents.
+# ---------------------------------------------------------------------------
+# Garbled-text detection
+# ---------------------------------------------------------------------------
 
-    Args:
-        path: Absolute or relative path to the PDF file.
+_GARBLED_RE = re.compile(r"[\ufffd\uf000-\uf8ff]")
+_CYRILLIC_RE = re.compile(r"[\u0400-\u04FF]")
+
+
+def _is_garbled(text: str) -> bool:
+    """Detect if extracted text is garbled (broken font mapping).
+
+    Checks two conditions:
+    1. If the text has a high percentage of words composed entirely of '?' or '\ufffd' (Unicode replacement char).
+    2. If the text lacks standard Cyrillic letters (for Ukrainian documents).
 
     Returns:
-        List of Element objects filtered to NarrativeText, Title,
-        ListItem, and Table types only.
-
-    Raises:
-        FileNotFoundError: If the PDF file does not exist at the given path.
-        ValueError: If unstructured fails to parse the PDF.
+        True if text appears garbled and needs OCR.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"PDF not found: {path}")
+    if not text.strip():
+        return True
 
-    size_mb = round(path.stat().st_size / 1024 / 1024, 2)
-    logger.info("parsing_pdf", path=str(path), size_mb=size_mb)
+    # 1. Check for garbage tokens like "?", "???", or "\ufffd\ufffd"
+    words = text.split()
+    if not words:
+        return True
+
+    bad_words = 0
+    for w in words:
+        clean_w = w.strip(".,;")
+        if not clean_w:
+            continue
+        # A word is bad if it's entirely '?' or entirely '\ufffd'
+        is_q = (clean_w == "?" * len(clean_w))
+        is_ufffd = (clean_w == "\ufffd" * len(clean_w))
+        if is_q or is_ufffd:
+            bad_words += 1
+
+    bad_ratio = bad_words / len(words)
+    if bad_ratio > 0.05:  # more than 5% of words are just '?' or '\ufffd'
+        return True
+
+    # 2. Check for Cyrillic density
+    # A Ukrainian document should have a reasonable amount of Cyrillic chars.
+    cyrillic_chars = sum(1 for c in text if "\u0400" <= c <= "\u04FF" or c in "іІїЇєЄґҐ")
+    alpha_chars = sum(1 for c in text if c.isalpha())
+
+    # If there are alphabet characters, but less than 10% are Cyrillic,
+    # it's likely a broken mapping that turned Cyrillic into Latin/symbols.
+    if alpha_chars > 50 and (cyrillic_chars / alpha_chars) < 0.1:
+        return True
+
+    return False
+
+
+# ---------------------------------------------------------------------------
+# OCR backend  (PyMuPDF render → Tesseract)
+# ---------------------------------------------------------------------------
+
+def _ocr_page_text(page) -> str:  # page: fitz.Page
+    """Render *page* at 300 DPI and return Tesseract OCR text (Ukrainian)."""
+    import fitz  # PyMuPDF
+
+    mat = fitz.Matrix(300 / 72, 300 / 72)
+    pix = page.get_pixmap(matrix=mat)
+    img_bytes = pix.tobytes("png")
+
+    # Write to temp file for tesseract CLI (most reliable on Windows)
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        tmp.write(img_bytes)
+        tmp_path = tmp.name
 
     try:
-        elements = partition_pdf(
-            filename=str(path),
-            strategy="fast",
-            languages=["ukr", "eng"],
+        env = {**os.environ, "TESSDATA_PREFIX": _TESSDATA_DIR}
+        proc = subprocess.run(
+            ["tesseract", tmp_path, "stdout", "-l", "ukr+eng", "--psm", "6"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=env,
         )
-    except Exception as exc:
-        logger.error("pdf_parse_error", path=str(path), error=str(exc))
-        raise ValueError(f"Failed to parse {path.name}: {exc}") from exc
-
-    filtered = [el for el in elements if isinstance(el, _KEEP_TYPES)]
-
-    logger.info(
-        "pdf_parsed",
-        path=path.name,
-        total_elements=len(elements),
-        kept_elements=len(filtered),
-    )
-    return filtered
+        if proc.returncode != 0:
+            logger.warning("tesseract_error", stderr=proc.stderr[:200])
+        return proc.stdout.strip()
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
 
 
-def chunk_elements(
-    elements: list[Element],
-    max_characters: int = 500,
-    overlap: int = 50,
-) -> list[str]:
-    """Chunk parsed elements using title-based semantic chunking.
+def _ocr_all_pages(pdf_path: Path) -> dict[int, str]:
+    """OCR every page of *pdf_path*, return {page_num: text} (1-indexed)."""
+    import fitz
 
-    How chunk_by_title works:
-    1. Each Title element acts as a hard boundary — starts a new chunk.
-    2. Consecutive NarrativeText/ListItem elements are merged until
-       they hit max_characters.
-    3. If a single element exceeds max_characters, it is split with
-       overlap to preserve context.
-    4. Elements shorter than combine_text_under_n_chars are merged
-       with their neighbors.
+    doc = fitz.open(str(pdf_path))
+    pages: dict[int, str] = {}
+    total = doc.page_count
+    logger.info("ocr_start", path=pdf_path.name, total_pages=total)
+    for i in range(total):
+        text = _ocr_page_text(doc[i])
+        if text:
+            pages[i + 1] = text
+        if (i + 1) % 10 == 0:
+            logger.info("ocr_progress", page=i + 1, total=total)
+    logger.info("ocr_done", path=pdf_path.name, pages_extracted=len(pages))
+    return pages
+
+
+def _fast_native_pages(pdf_path: Path) -> dict[int, str]:
+    """Extract raw text per page using fitz directly (no OCR, ever).
+
+    Returns {page_number: text} (1-indexed).  Uses fitz.get_text('text')
+    which only reads embedded font data - no fallback to Tesseract.
+    If the PDF has broken font encoding the result will contain replacement
+    characters which _is_garbled() will detect.
+    """
+    import fitz
+
+    doc = fitz.open(str(pdf_path))
+    pages: dict[int, str] = {}
+    for i in range(doc.page_count):
+        text = doc[i].get_text("text").strip()
+        if text:
+            pages[i + 1] = text
+    return pages
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def parse_pdf_to_markdown(pdf_path: Path) -> dict[int, str]:
+    """Parse a PDF and return {page_number: text} (1-indexed).
+
+    Strategy:
+    1. Extract raw text via fitz (native, zero OCR).
+    2. If garbled - OCR via PyMuPDF render + Tesseract ukr+eng.
 
     Args:
-        elements: List of Element objects from parse_pdf().
-        max_characters: Maximum character count per chunk (default: 500).
-        overlap: Character overlap between split chunks (default: 50).
+        pdf_path: Path to the PDF file.
 
     Returns:
-        List of non-empty text strings ready for embedding.
+        Dict mapping 1-based page numbers to extracted text strings.
+
+    Raises:
+        FileNotFoundError: If *pdf_path* does not exist.
+        RuntimeError: If both extraction methods fail.
     """
-    if not elements:
-        return []
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
-    chunks = chunk_by_title(
-        elements,
-        max_characters=max_characters,
-        overlap=overlap,
-        combine_text_under_n_chars=100,
+    size_mb = round(pdf_path.stat().st_size / 1024 / 1024, 2)
+    logger.info("parsing_pdf", path=pdf_path.name, size_mb=size_mb)
+
+    # ── Step 1: fitz native text (no OCR whatsoever) ──────────────────────
+    try:
+        native_pages = _fast_native_pages(pdf_path)
+        combined = " ".join(native_pages.values())
+
+        if not _is_garbled(combined):
+            # Text is clean! pymupdf4llm keeps maliciously triggering OCR
+            # and ruining perfect text, so we return native text directly.
+            logger.info("pdf_parsed_native_clean", path=pdf_path.name, pages=len(native_pages))
+            return native_pages
+
+        logger.warning(
+            "fast_extraction_garbled_switching_to_ocr",
+            path=pdf_path.name,
+            sample=combined[:80],
+        )
+    except Exception as exc:
+        logger.warning("fast_extraction_failed", path=pdf_path.name, error=str(exc))
+
+
+    # ── Step 2: OCR via PyMuPDF render + Tesseract ────────────────────────
+    try:
+        pages = _ocr_all_pages(pdf_path)
+        logger.info("pdf_parsed_ocr", path=pdf_path.name, pages=len(pages))
+        return pages
+    except Exception as exc:
+        logger.error("ocr_failed", path=pdf_path.name, error=str(exc))
+        raise RuntimeError(f"Failed to parse {pdf_path.name}") from exc
+
+
+def chunk_markdown(
+    pages: dict[int, str],
+    chunk_size: int = 750,
+    chunk_overlap: int = 100,
+) -> list[dict]:
+    """Chunk Markdown text using LangChain splitters.
+
+    Uses ``MarkdownHeaderTextSplitter`` to respect heading boundaries, then
+    ``RecursiveCharacterTextSplitter`` to enforce *chunk_size*.
+
+    Args:
+        pages: Dict from :func:`parse_pdf_to_markdown`.
+        chunk_size: Max characters per chunk.
+        chunk_overlap: Overlap between consecutive chunks.
+
+    Returns:
+        List of dicts with keys:
+        - ``content`` (str): chunk text
+        - ``page_number`` (int): source page (1-indexed)
+    """
+    from langchain_text_splitters import (
+        MarkdownHeaderTextSplitter,
+        RecursiveCharacterTextSplitter,
     )
 
-    texts = [str(chunk) for chunk in chunks if str(chunk).strip()]
-
-    avg_len = round(sum(len(t) for t in texts) / max(len(texts), 1))
-    logger.info(
-        "elements_chunked",
-        input_elements=len(elements),
-        output_chunks=len(texts),
-        avg_chunk_len=avg_len,
+    # Headers to split on (Markdown ATX style)
+    header_splits = [
+        ("#", "h1"),
+        ("##", "h2"),
+        ("###", "h3"),
+    ]
+    md_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=header_splits,
+        strip_headers=False,
     )
-    return texts
+    char_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ".", " ", ""],
+    )
 
+    result: list[dict] = []
+    for page_number, text in sorted(pages.items()):
+        if not text.strip():
+            continue
+        try:
+            md_docs = md_splitter.split_text(text)
+            for doc in md_docs:
+                sub_docs = char_splitter.split_text(doc.page_content)
+                for sub in sub_docs:
+                    if sub.strip():
+                        result.append(
+                            {"content": sub.strip(), "page_number": page_number}
+                        )
+        except Exception as exc:
+            logger.warning(
+                "chunk_error", page=page_number, error=str(exc)
+            )
+            # Fallback: just split by characters
+            for sub in char_splitter.split_text(text):
+                if sub.strip():
+                    result.append({"content": sub.strip(), "page_number": page_number})
+
+    logger.info("chunks_created", total=len(result))
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Legacy compatibility shims (used by seed_db.py and reseed_doc.py)
+# ---------------------------------------------------------------------------
 
 def extract_pages_text(path: Path) -> dict[int, str]:
-    """Extract raw text from a PDF file grouped by page number.
+    """Legacy API: extract raw text per page (used by seed_db.py)."""
+    return parse_pdf_to_markdown(path)
 
-    Each page's text is a concatenation of all element texts on that page,
-    joined by newlines. Used to populate the `pages` table with raw text.
 
-    Args:
-        path: Path to the PDF file.
+def parse_pdf(path: Path) -> list:
+    """Legacy API: return list of fake Element-like objects for compatibility."""
 
-    Returns:
-        Dict mapping 1-indexed page_number to concatenated raw text.
+    class _FakePage:
+        """Minimal stand-in for an unstructured Element."""
 
-    Raises:
-        ValueError: If unstructured fails to parse the PDF.
-    """
-    try:
-        elements = partition_pdf(
-            filename=str(path),
-            strategy="fast",
-            languages=["ukr", "eng"],
-        )
-    except Exception as exc:
-        logger.error("pdf_extract_pages_error", path=str(path), error=str(exc))
-        raise ValueError(f"Failed to extract pages from {path.name}: {exc}") from exc
+        def __init__(self, text: str, page_number: int) -> None:
+            self._text = text
 
-    pages: dict[int, list[str]] = {}
+            class _Meta:
+                pass
+
+            self.metadata = _Meta()
+            self.metadata.page_number = page_number  # type: ignore[attr-defined]
+
+        def __str__(self) -> str:
+            return self._text
+
+    pages = parse_pdf_to_markdown(path)
+    return [_FakePage(text, pg) for pg, text in sorted(pages.items()) if text.strip()]
+
+
+def chunk_elements(elements: list, max_characters: int = 750, overlap: int = 100) -> list[str]:
+    # Legacy API: chunk elements into strings (used by seed_db.py).
+    # Re-assemble pages dict from _FakePage objects
+    pages: dict[int, str] = {}
     for el in elements:
-        page_num = el.metadata.page_number or 1
-        pages.setdefault(page_num, []).append(str(el))
+        pg = getattr(getattr(el, "metadata", None), "page_number", 1) or 1
+        pages[pg] = pages.get(pg, "") + "\n" + str(el)
 
-    return {
-        page_num: "\n".join(texts)
-        for page_num, texts in sorted(pages.items())
-    }
+    chunks = chunk_markdown(pages, chunk_size=max_characters, chunk_overlap=overlap)
+    return [c["content"] for c in chunks]

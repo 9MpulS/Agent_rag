@@ -12,7 +12,15 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "structlog>=24.4.0",
     "groq>=0.13.1",
-    "unstructured[pdf]>=0.16.12"
+    "unstructured[pdf]>=0.16.12",
+    "playwright>=1.60.0",
+    "unstructured-inference>=1.6.11",
+    "pdfplumber>=0.11.9",
+    "pdf2image>=1.17.0",
+    "pytesseract>=0.3.13",
+    "pymupdf4llm>=1.27.2.3",
+    "langchain-community>=0.4.1",
+    "langchain-text-splitters>=1.1.2",
 ]
 
 [project.optional-dependencies]

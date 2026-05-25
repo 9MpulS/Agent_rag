@@ -1,0 +1,408 @@
+[
+  {
+    "query": "За що мене можуть відрахувати з університету?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2623,
+    "expected_page_number": 44,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які документи мені потрібні, щоб поступити на бакалавра в 2026 році, якщо я з ТOТ?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3694,
+    "expected_page_number": 52,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Мене відрахують, якщо я не здав комісію з перескладання?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2622,
+    "expected_page_number": 43,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які предмети треба здавати на НМТ, щоб поступити на комп'ютерні науки?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3706,
+    "expected_page_number": 64,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Скільки балів мені треба набрати, щоб подати заяву на Право або Медицину?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3689,
+    "expected_page_number": 47,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Чи можу я перескласти залік або екзамен, щоб отримати вищу оцінку і підвищити стипендію?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2620,
+    "expected_page_number": 41,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Як мені заселитися в гуртожиток і чи погоджують це зі студентами?",
+    "expected_document_id": 203,
+    "expected_document_title": "Статут СумДУ",
+    "expected_page_id": 2715,
+    "expected_page_number": 25,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Скільки всього заяв я можу подати під час вступної кампанії 2026 і скільки з них на бюджет?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3670,
+    "expected_page_number": 28,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Що буде, якщо мене зловлять на списуванні або плагіаті під час навчання?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2641,
+    "expected_page_number": 62,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Як мені перевестися з контракту на вакантне бюджетне місце?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2632,
+    "expected_page_number": 53,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Чи обов'язково мені підписувати декларацію про академічну доброчесність і де це робити?",
+    "expected_document_id": 230,
+    "expected_document_title": "Кодекс академічної доброчесності",
+    "expected_page_id": 3059,
+    "expected_page_number": 4,
+    "expected_section_id": 41,
+    "expected_section_name": "Академічна доброчесність"
+  },
+  {
+    "query": "Який мінімальний бал потрібен для вступу на будь-яку іншу спеціальність на контракт?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3689,
+    "expected_page_number": 47,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Чи маю я право самостійно обирати предмети (вибіркові дисципліни) і який це відсоток від програми?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2591,
+    "expected_page_number": 12,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Як працює дуальна форма освіти і скільки часу я буду проводити на робочому місці?",
+    "expected_document_id": 2,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному运行 у Сумському державному університеті.pdf",
+    "expected_page_id": 2021,
+    "expected_page_number": 21
+  },
+  {
+    "query": "Що робити, якщо я не згоден з оцінкою за екзамен і хочу подати апеляцію?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2622,
+    "expected_page_number": 43,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Чи можу я взяти академічну відпустку за сімейними обставинами і на який термін?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2634,
+    "expected_page_number": 55,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які системи використовує СумДУ для перевірки моїх курсових чи дипломних робіт на плагіат?",
+    "expected_document_id": 231,
+    "expected_document_title": "Методична інструкція щодо перевірки робіт на наявність ознак академічного плагіату",
+    "expected_page_id": 3062,
+    "expected_page_number": 1,
+    "expected_section_id": 41,
+    "expected_section_name": "Академічна доброчесність",
+    "expected_chunk_id": 16679
+  },
+  {
+    "query": "Чи можу я подати анонімне звернення, якщо мої права або академічну свободу порушують?",
+    "expected_document_id": 200,
+    "expected_document_title": "Політика захисту академічної свободи у СумДУ",
+    "expected_page_id": 2671,
+    "expected_page_number": 7,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які є пріоритети при переведенні студентів-контрактників на вільні бюджетні місця?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2632,
+    "expected_page_number": 53,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які обов'язки мають студенти СумДУ згідно зі Статутом?",
+    "expected_document_id": 203,
+    "expected_document_title": "Статут СумДУ",
+    "expected_page_id": 2708,
+    "expected_page_number": 18,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які права мають студенти щодо участі у науковій діяльності та публікації своїх робіт?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2644,
+    "expected_page_number": 65,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "До кого мені звертатися, якщо виник конфлікт з викладачем через оцінку?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2622,
+    "expected_page_number": 43,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Що таке академічна різниця і яка її максимальна кількість кредитів для поновлення чи переведення?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2637,
+    "expected_page_number": 58,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Скільки часу дається студенту на ліквідацію (здачу) академічної різниці?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2638,
+    "expected_page_number": 59,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Що таке MIX і які можливості ця платформа дає студенту?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2601,
+    "expected_page_number": 22,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Чи перевіряють звіти з практики або домашні контрольні роботи на плагіат?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2609,
+    "expected_page_number": 30,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Чи відрахують мене, якщо я не з'явився на екзамен без поважної причини?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2621,
+    "expected_page_number": 42,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Яка тривалість літніх та зимових канікул для студентів протягом навчального року?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2601,
+    "expected_page_number": 22,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Як вираховується підсумкова семестрова оцінка з дисципліни, якщо по ній є екзамен?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2620,
+    "expected_page_number": 41,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Що таке майнор (minor) та мейджор (major) у вибірковій частині моєї освітньої програми?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2584,
+    "expected_page_number": 5,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Хто такі близькі особи та як врегульовується конфлікт інтересів, якщо мій родич працює моїм керівником або викладачем?",
+    "expected_document_id": 202,
+    "expected_document_title": "Про заходи щодо запобігання корупції",
+    "expected_page_id": 2682,
+    "expected_page_number": 1,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання",
+    "expected_chunk_id": 15177
+  },
+  {
+    "query": "Які існують фундаментальні цінності академічної доброчесності згідно з Кодексом?",
+    "expected_document_id": 230,
+    "expected_document_title": "Кодекс академічної доброчесності",
+    "expected_page_id": 3057,
+    "expected_page_number": 2,
+    "expected_section_id": 41,
+    "expected_section_name": "Академічна доброчесність"
+  },
+  {
+    "query": "Чи можу я самостійно обрати підприємство або фірму для проходження практики?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2614,
+    "expected_page_number": 35,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Що таке коефіцієнти подібності №1 та №2 у звіті системи StrikePlagiarism?",
+    "expected_document_id": 231,
+    "expected_document_title": "Методична інструкція щодо перевірки робіт на наявність ознак академічного плагіату",
+    "expected_page_id": 3063,
+    "expected_page_number": 2,
+    "expected_section_id": 41,
+    "expected_section_name": "Академічна доброчесність"
+  },
+  {
+    "query": "Що означає показник 'Artificial intelligence (AI) detection score' у системі Identific під час перевірки тексту?",
+    "expected_document_id": 231,
+    "expected_document_title": "Методична інструкція щодо перевірки робіт на наявність ознак академічного плагіату",
+    "expected_page_id": 3064,
+    "expected_page_number": 3,
+    "expected_section_id": 41,
+    "expected_section_name": "Академічна доброчесність"
+  },
+  {
+    "query": "Які заходи дисциплінарного стягнення може застосувати викладач, якщо виявить у моїй роботі плагіат чи списування?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2641,
+    "expected_page_number": 62,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які права мають викладачі та науково-педагогічні працівники університету відповідно до Положення?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2642,
+    "expected_page_number": 63,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Хто входить до складу Апеляційної комісії для розгляду скарг студентів щодо оцінювання успішності?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2622,
+    "expected_page_number": 43,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Які категорії студентів мають право на отримання додаткових балів до конкурсного балу завдяки підготовчим курсам?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3708,
+    "expected_page_number": 66,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Як працює Комісія з етики та врегулювання конфліктів у разі порушення моєї академічної свободи?",
+    "expected_document_id": 200,
+    "expected_document_title": "Політика захисту академічної свободи у СумДУ",
+    "expected_page_id": 2671,
+    "expected_page_number": 7,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "query": "Яка мова є офіційною мовою викладання в Сумському державному університеті і чи є винятки?",
+    "expected_document_id": 203,
+    "expected_document_title": "Статут СумДУ",
+    "expected_page_id": 2693,
+    "expected_page_number": 3,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  },
+  {
+    "document_id": 8,
+    "query": "Які особливі умови діють для вступу учасників бойових дій (УБД) у 2026 році?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3690,
+    "expected_page_number": 48,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Що таке квота-1 і квота-2 при розподілі бюджетних місць під час вступної кампанії?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3651,
+    "expected_page_number": 9,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Які спеціальності користуються особливою підтримкою держави в СумДУ в 2026 році?",
+    "expected_document_id": 290,
+    "expected_document_title": "Правила прийому до СумДУ в 2026 році",
+    "expected_page_id": 3709,
+    "expected_page_number": 67,
+    "expected_section_id": 48,
+    "expected_section_name": "Правила прийому"
+  },
+  {
+    "query": "Чи можу я повернутися на бюджет, якщо я відновлююся на навчання після служби в ЗСУ (як учасник бойових дій)?",
+    "expected_document_id": 198,
+    "expected_document_title": "Положення про організацію освітнього процесу в Сумському державному університеті",
+    "expected_page_id": 2628,
+    "expected_page_number": 49,
+    "expected_section_id": 37,
+    "expected_section_name": "Загальні питання"
+  }
+]

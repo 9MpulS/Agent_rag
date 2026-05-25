@@ -8,11 +8,13 @@ from agent_rag.llm.prompts import FTS_QUERY_SYSTEM
 from agent_rag.db.repositories import fts_search_chunks
 from agent_rag.search.vector_search import ChunkResult
 
+from agent_rag.search.ukrainian_stemmer import stem_ukrainian_text
+
 async def fts_query_enhance(groq: GroqClient, query: str) -> tuple[str, LLMUsage]:
     """Enhance user query for Full-Text Search."""
     # Complete text using Groq
     response = await groq.complete(FTS_QUERY_SYSTEM, query)
-    fts_query = response.content.strip()
+    fts_query = stem_ukrainian_text(response.content.strip())
     return fts_query, response.usage
 
 async def fts_search(

@@ -7,8 +7,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from groq import AsyncGroq
-from agent_rag.db.models import Chunk, RegistrySection
+from agent_rag.db.models import Chunk, RegistrySection, Page
 from agent_rag.config import settings
 
 async def main():
@@ -27,7 +28,7 @@ async def main():
         for sid in section_ids:
             # Get 4 random chunks for each section
             # We want chunks that have at least some reasonable text length
-            stmt = select(Chunk).where(
+            stmt = select(Chunk).options(selectinload(Chunk.page).selectinload(Page.document)).where(
                 Chunk.registry_section_id == sid,
                 func.length(Chunk.content) > 200
             ).order_by(func.random()).limit(4)
@@ -50,8 +51,11 @@ async def main():
                     benchmark_data.append({
                         "query": question,
                         "expected_section_id": chunk.registry_section_id,
-                        "relevant_chunk_ids": [chunk.id],
-                        "relevant_page_ids": [chunk.page_id]
+                        "expected_document_id": chunk.page.document.id,
+                        "expected_document_title": chunk.page.document.title,
+                        "expected_page_id": chunk.page.id,
+                        "expected_page_number": chunk.page.page_number,
+                        "expected_chunk_id": chunk.id,
                     })
                 except Exception as e:
                     print(f"Error calling Groq for chunk {chunk.id}: {e}")
@@ -64,8 +68,13 @@ async def main():
             f.write('    {\n')
             f.write(f'        "query": "{item["query"].replace("\"", "")}",\n')
             f.write(f'        "expected_section_id": {item["expected_section_id"]},\n')
-            f.write(f'        "relevant_chunk_ids": {item["relevant_chunk_ids"]},\n')
-            f.write(f'        "relevant_page_ids": {item["relevant_page_ids"]},\n')
+            f.write(f'        "expected_document_id": {item["expected_document_id"]},\n')
+            # escape quotes in title
+            safe_title = item["expected_document_title"].replace('"', '\\"')
+            f.write(f'        "expected_document_title": "{safe_title}",\n')
+            f.write(f'        "expected_page_id": {item["expected_page_id"]},\n')
+            f.write(f'        "expected_page_number": {item["expected_page_number"]},\n')
+            f.write(f'        "expected_chunk_id": {item["expected_chunk_id"]},\n')
             f.write('    }')
             if i < len(benchmark_data) - 1:
                 f.write(',\n')

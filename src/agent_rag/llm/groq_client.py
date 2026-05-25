@@ -97,3 +97,44 @@ class GroqClient:
             parsed = {}
             
         return parsed, usage
+
+    async def complete_with_tools(
+        self,
+        messages: list[dict],
+        tools: list[dict],
+    ) -> tuple[object, LLMUsage]:
+        """Completion call with native tool calling support.
+
+        Args:
+            messages: Full conversation history in OpenAI format.
+            tools: Tool definitions in OpenAI function calling format.
+
+        Returns:
+            Tuple of (response message object, usage).
+            The message may contain tool_calls or text content.
+        """
+        t0 = time.perf_counter()
+
+        response = await self.client.chat.completions.create(
+            model=settings.GROQ_MODEL,
+            messages=messages,
+            tools=tools,
+            temperature=settings.GROQ_TEMPERATURE,
+            max_tokens=settings.GROQ_MAX_TOKENS,
+        )
+
+        latency_ms = (time.perf_counter() - t0) * 1000
+
+        usage = LLMUsage(
+            prompt_tokens=response.usage.prompt_tokens,
+            completion_tokens=response.usage.completion_tokens,
+            total_tokens=response.usage.total_tokens,
+            latency_ms=latency_ms,
+            cost_usd=self._calculate_cost(
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
+            ),
+        )
+
+        return response.choices[0].message, usage
+

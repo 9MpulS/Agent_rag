@@ -11,6 +11,7 @@ from agent_rag.db.models import (
     Page,
     RegistrySection,
 )
+from agent_rag.search.ukrainian_stemmer import stem_ukrainian_text
 
 logger = structlog.get_logger()
 
@@ -80,6 +81,10 @@ async def create_chunks_batch(
         chunks_data: List of dicts with keys:
             page_id, registry_section_id, content, embedding, chunk_index
     """
+    for data in chunks_data:
+        if "content" in data and "content_stemmed" not in data:
+            data["content_stemmed"] = stem_ukrainian_text(data["content"])
+            
     chunks = [Chunk(**data) for data in chunks_data]
     session.add_all(chunks)
     await session.flush()

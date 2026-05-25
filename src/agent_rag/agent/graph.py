@@ -1,43 +1,45 @@
-"""Agent graph definition."""
+"""Agentic RAG graph definition.
+
+Reactive agent loop:
+  agent_decide ──→ (tool call?) ──→ execute_tool ──→ agent_decide
+                 └─ (final_answer or max iter) ──→ END
+"""
 
 from langgraph.graph import StateGraph, END
 from agent_rag.config import settings
 from agent_rag.agent.state import AgentState
-from agent_rag.agent.nodes import (
-    embed_query,
-    route_to_section,
-    enhance_fts_query,
-    search,
-    check_sufficiency,
-    expand_search,
-    generate_answer,
-)
+from agent_rag.agent.nodes import agent_decide, execute_tool
 
 builder = StateGraph(AgentState)
 
-builder.add_node("embed_query", embed_query)
-builder.add_node("route_to_section", route_to_section)
-builder.add_node("enhance_fts_query", enhance_fts_query)
-builder.add_node("search", search)
-builder.add_node("check_sufficiency", check_sufficiency)
-builder.add_node("expand_search", expand_search)
-builder.add_node("generate_answer", generate_answer)
+# Two nodes in the agent loop
+builder.add_node("agent", agent_decide)
+builder.add_node("tools", execute_tool)
 
-builder.set_entry_point("embed_query")
-builder.add_edge("embed_query", "route_to_section")
-builder.add_edge("route_to_section", "enhance_fts_query")
-builder.add_edge("enhance_fts_query", "search")
-builder.add_edge("search", "check_sufficiency")
+builder.set_entry_point("agent")
 
-def sufficiency_router(state: AgentState) -> str:
-    if state.get("context_sufficient"):
-        return "generate_answer"
-    if state.get("iteration", 0) >= settings.MAX_RETRY_ITERATIONS:
-        return "generate_answer"
-    return "expand_search"
 
-builder.add_conditional_edges("check_sufficiency", sufficiency_router)
-builder.add_edge("expand_search", "enhance_fts_query")
-builder.add_edge("generate_answer", END)
+def should_continue(state: AgentState) -> str:
+    """Route based on agent's decision.
+
+    - tool call (search / refine_query) → "tools"
+    - final_answer or max iterations   → END
+    """
+    action = state.get("last_action", "final_answer")
+    iteration = state.get("iteration", 0)
+
+    # Safety limit
+    if iteration >= settings.MAX_RETRY_ITERATIONS:
+        return END
+
+    if action in ("search", "refine_query"):
+        return "tools"
+
+    # final_answer or any unknown action
+    return END
+
+
+builder.add_conditional_edges("agent", should_continue)
+builder.add_edge("tools", "agent")
 
 graph = builder.compile()

@@ -123,6 +123,7 @@ class Chunk(Base):
         ForeignKey("registry_sections.id"), nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_stemmed: Mapped[str] = mapped_column(Text, nullable=True)
     embedding = mapped_column(Vector(settings.EMBEDDING_DIM), nullable=True)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content_tsv = mapped_column(TSVECTOR, nullable=True)
@@ -159,7 +160,7 @@ hnsw_index = Index(
 TSV_TRIGGER_FUNCTION = DDL("""
 CREATE OR REPLACE FUNCTION chunks_tsv_trigger() RETURNS trigger AS $$
 BEGIN
-    NEW.content_tsv := to_tsvector('simple', NEW.content);
+    NEW.content_tsv := to_tsvector('simple', COALESCE(NEW.content_stemmed, NEW.content));
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

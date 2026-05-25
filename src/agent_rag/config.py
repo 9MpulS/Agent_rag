@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # ── Groq / LLM ────────────────────────────────────────────
     GROQ_API_KEY: str
-    GROQ_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GROQ_TEMPERATURE: float = 0.0
     GROQ_MAX_TOKENS: int = 1024
 
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     ROUTING_SECONDARY_THRESHOLD: float = 0.7
 
     # ── Agent / Graph ─────────────────────────────────────────
-    MAX_RETRY_ITERATIONS: int = 2
+    MAX_RETRY_ITERATIONS: int = 5
 
     # ── Benchmark / Testing ───────────────────────────────────
     BENCHMARK_SLEEP_BETWEEN_QUERIES: float = 15.0

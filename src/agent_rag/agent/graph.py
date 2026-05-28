@@ -8,13 +8,14 @@ Reactive agent loop:
 from langgraph.graph import StateGraph, END
 from agent_rag.config import settings
 from agent_rag.agent.state import AgentState
-from agent_rag.agent.nodes import agent_decide, execute_tool
+from agent_rag.agent.nodes import agent_decide, execute_tool, generate_answer
 
 builder = StateGraph(AgentState)
 
-# Two nodes in the agent loop
+# Three nodes in the agent loop
 builder.add_node("agent", agent_decide)
 builder.add_node("tools", execute_tool)
+builder.add_node("generate", generate_answer)
 
 builder.set_entry_point("agent")
 
@@ -30,16 +31,17 @@ def should_continue(state: AgentState) -> str:
 
     # Safety limit
     if iteration >= settings.MAX_RETRY_ITERATIONS:
-        return END
+        return "generate"
 
     if action in ("search", "refine_query"):
         return "tools"
 
     # final_answer or any unknown action
-    return END
+    return "generate"
 
 
 builder.add_conditional_edges("agent", should_continue)
 builder.add_edge("tools", "agent")
+builder.add_edge("generate", END)
 
 graph = builder.compile()

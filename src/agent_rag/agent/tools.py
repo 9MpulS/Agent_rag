@@ -15,6 +15,7 @@ from agent_rag.config import settings
 from agent_rag.embeddings import get_embedding
 from agent_rag.search.fts_search import fts_query_enhance, fts_search
 from agent_rag.search.hybrid_search import hybrid_search, RankedResult
+from agent_rag.search.hybrid_search_llm import hybrid_search as hybrid_search_llm
 from agent_rag.search.vector_search import vector_search
 from agent_rag.db.repositories import get_all_section_embeddings
 from agent_rag.llm.groq_client import GroqClient, LLMUsage
@@ -139,9 +140,22 @@ async def execute_search(
     timings["fts_enhance_ms"] = round((time.perf_counter() - t0) * 1000, 1)
     token_usage["fts_enhance"] = fts_usage
 
-    # 4. Hybrid search
+    # 4. Hybrid search (original without LLM reranker)
+    # t0 = time.perf_counter()
+    # results, rerank_usage = await hybrid_search(
+    #     session=session,
+    #     groq=groq,
+    #     query=query,
+    #     query_embedding=query_embedding,
+    #     fts_query=fts_q,
+    #     section_id=section_id,
+    # )
+    # timings["search_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+    # token_usage["rerank"] = rerank_usage
+
+    # 4. Hybrid search with LLM reranker
     t0 = time.perf_counter()
-    results, rerank_usage = await hybrid_search(
+    results, rerank_usage = await hybrid_search_llm(
         session=session,
         groq=groq,
         query=query,

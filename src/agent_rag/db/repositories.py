@@ -173,3 +173,28 @@ async def fts_search_chunks(
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
+
+async def get_section_by_name(
+    session: AsyncSession,
+    name: str,
+) -> RegistrySection | None:
+    """Get a registry section by its exact name."""
+    result = await session.execute(
+        select(RegistrySection).where(RegistrySection.name == name)
+    )
+    return result.scalars().first()
+
+
+async def delete_document(
+    session: AsyncSession,
+    document_id: int,
+) -> bool:
+    """Delete a document by its ID. Casading deletes handle pages and chunks."""
+    doc = await session.get(Document, document_id)
+    if not doc:
+        return False
+    await session.delete(doc)
+    await session.flush()
+    logger.info("deleted_document", document_id=document_id)
+    return True
+

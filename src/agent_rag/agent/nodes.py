@@ -18,7 +18,7 @@ from agent_rag.agent.tools import (
     execute_search,
     execute_refine_query,
 )
-from agent_rag.llm.prompts import AGENT_SYSTEM
+from agent_rag.llm.prompts import AGENT_SYSTEM, ANSWER_SYSTEM
 
 logger = structlog.get_logger()
 
@@ -203,6 +203,34 @@ async def execute_tool(state: AgentState) -> dict:
         # Unknown action — treat as done
         logger.warning("unknown_tool_action", action=action)
         return {"iteration": iteration + 1}
+
+
+async def generate_answer(state: AgentState) -> dict:
+    """Generate the final detailed answer using text completion (non-JSON)."""
+    t0 = time.perf_counter()
+    groq = state["groq_client"]
+    
+    context = state.get("accumulated_context", "")
+    query = state.get("query", "")
+    
+    if not context:
+        # If agent never retrieved anything or failed
+        context = "Жодної інформації не знайдено."
+        
+    user_prompt = f"Запит користувача: {query}\n\nКонтекст:\n{context}"
+    
+    response = await groq.complete(ANSWER_SYSTEM, user_prompt)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    
+    token_usage = dict(state.get("token_usage", {}))
+    token_usage["generate_answer"] = response.usage
+    
+    return {
+        "answer": response.content,
+        "token_usage": token_usage,
+        "timings": {**state.get("timings", {}), "generate_answer_ms": round(elapsed_ms, 1)},
+    }
+
 
 
 

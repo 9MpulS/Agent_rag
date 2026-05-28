@@ -1,4 +1,23 @@
 services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Зверніть увагу, що хост БД змінено з localhost на postgres
+      - DATABASE_URL=postgresql+asyncpg://user:pass@postgres:5432/agent_rag
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      # host.docker.internal дозволяє контейнеру бачити Ollama на хост-машині
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-paraphrase-multilingual-mpnet-base-v2}
+      - EMBEDDING_DIM=${EMBEDDING_DIM:-768}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.3-70b-versatile}
+    depends_on:
+      - postgres
+    volumes:
+      # Мапимо папку для тимчасових завантажень, щоб вона зберігалася, або просто залишаємо як є
+      - ./temp_uploads:/app/temp_uploads
+
   postgres:
     image: pgvector/pgvector:pg16
     environment:
